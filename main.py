@@ -1,8 +1,12 @@
+import json
+import redis
 from config import url
 from scraper import fetch_page
 from data_collector import get_numbers
 from time_parsing import filter_numbers
-import json
+
+# Подключение к Redis
+redis_client = redis.Redis(host='localhost', port=6379, db=0, decode_responses=True)
 
 def main():
     try:
@@ -13,8 +17,10 @@ def main():
         # Фильтруем данные
         filtered_data = filter_numbers(data)
 
-        # Выводим отфильтрованные данные
-        print(json.dumps(filtered_data, indent=4, ensure_ascii=False))
+        # Сохраняем в Redis
+        redis_client.set("filtered_numbers", json.dumps(filtered_data, ensure_ascii=False))
+
+        print("Данные сохранены в Redis!")
 
     except Exception as e:
         print(f"Ошибка: {e}")
