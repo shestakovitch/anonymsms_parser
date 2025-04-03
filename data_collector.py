@@ -24,24 +24,28 @@ def get_countries(soup: BeautifulSoup) -> list:
 def get_numbers(soup: BeautifulSoup):
     """
     Функция получает список номеров со ссылками и с данными о последнем обновлении
-    :param soup:
-    :return:
+    для всех стран.
+
+    :param soup: BeautifulSoup object
+    :return: list of dictionaries with country data
     """
     countries_list = get_countries(soup)
-    # return countries_list
-    for country in countries_list:
-        # print(country)
-        soup = fetch_page(url=url + country)
-        data = {"country": country,
-                "numbers": [
-            {
-                "link": card.select_one('.sms-card__number a')['href'],
-                "phone_number": card.select_one('.sms-card__number a').get_text(strip=True),
-                "latest": card.select_one('.sms-card__item:-soup-contains("schedule") .text--bold').get_text(strip=True)
-            }
-            for card in soup.select('.sms-card')
-        ]
-        }
+    data = []  # Храним данные всех стран
 
-        for k, v in data.items():
-            print(f"{k}: {v}")
+    for country in countries_list:
+        soup = fetch_page(url=url + country)
+        country_data = {
+            "country": country,
+            "numbers": [
+                {
+                    "link": card.select_one('.sms-card__number a')['href'],
+                    "phone_number": card.select_one('.sms-card__number a').get_text(strip=True),
+                    "latest": card.select_one('.sms-card__item:-soup-contains("schedule") .text--bold').get_text(
+                        strip=True)
+                }
+                for card in soup.select('.sms-card')
+            ]
+        }
+        data.append(country_data)
+
+    return data

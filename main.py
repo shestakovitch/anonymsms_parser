@@ -8,7 +8,7 @@ def main():
     try:
         # Загрузка страницы
         soup = fetch_page(url)
-        get_numbers(soup)
+        print(get_numbers(soup))
 
 
     except Exception as e:
