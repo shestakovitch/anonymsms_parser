@@ -5,6 +5,15 @@ redis_client = redis.Redis(host='localhost', port=6379, db=0, decode_responses=T
 
 data = redis_client.get("filtered_numbers")  # Получаем данные
 if data:
-    print(json.loads(data))  # Декодируем из JSON и печатаем
+    filtered_data = json.loads(data)
+    print("Данные загружены!")
 else:
-    print("Данных нет в Redis!")
+    print("Данные не найдены в Redis")
+    exit()
+
+links_to_scrape = []
+for country_data in filtered_data:
+    for num in country_data["active_numbers"]:
+        links_to_scrape.append(num["link"])  # Берем ссылку
+
+print(links_to_scrape)

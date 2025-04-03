@@ -12,7 +12,8 @@ def main():
     try:
         # Загрузка страницы
         soup = fetch_page(url)
-        data = get_numbers(soup)  # Получаем список номеров
+        # Получаем список номеров
+        data = get_numbers(soup)
 
         # Фильтруем данные
         filtered_data = filter_numbers(data)

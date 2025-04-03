@@ -49,3 +49,12 @@ def get_numbers(soup: BeautifulSoup):
         data.append(country_data)
 
     return data
+
+
+def get_messages(soup: BeautifulSoup):
+    """
+    Функция получает информацию о сообщениях активных номеров
+    :param soup: BeautifulSoup object
+    :return: list of dictionaries with country data
+    """
+    pass
