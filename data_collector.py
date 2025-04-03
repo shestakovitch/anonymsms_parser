@@ -6,7 +6,7 @@ from config import url
 def get_countries(soup: BeautifulSoup) -> list:
     """
     Функция получает названия стран с главной страницы
-    :param soup:
+    :param soup: BeautifulSoup object
     :return list:
     """
     # Ищем тег <h2> с нужным классом и текстом "Countries", убирая лишние пробелы

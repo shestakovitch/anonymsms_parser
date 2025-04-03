@@ -19,7 +19,7 @@ def fetch_page(url):
         proxies = {"http": f"http://{proxy}", "https": f"http://{proxy}"}
 
         try:
-            response = requests.get(url, headers=headers, proxies=proxies, timeout=3)
+            response = requests.get(url, headers=headers, proxies=proxies, timeout=5)
             # print(f"Используем прокси: {proxy}")
             return BeautifulSoup(response.text, "lxml")
 
