@@ -57,3 +57,21 @@ def get_messages(soup: BeautifulSoup):
     :param soup: BeautifulSoup object
     :return: list of dictionaries with country data
     """
+    messages = []
+    paginator = soup.select_one("div.pagination a.page-numbers")
+    # print(paginator.get_text(strip=True))
+    for row in soup.select("tbody tr"):
+        from_td = row.select_one("td:nth-of-type(1)")
+        text_td = row.select_one("td:nth-of-type(2)")
+        date_td = row.select_one("td:nth-of-type(3)")
+
+        if not (from_td and text_td and date_td):
+            continue  # Пропускаем строки, где нет нужных данных
+
+        messages.append({
+            "from": from_td.get_text(strip=True),
+            "text": text_td.get_text(" ", strip=True),
+            "date": date_td.get_text(strip=True)
+        })
+
+    return messages
