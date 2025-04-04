@@ -1,6 +1,7 @@
 from bs4 import BeautifulSoup
 from scraper import fetch_page
 from config import url
+from time_parsing import text_to_seconds
 
 
 def get_countries(soup: BeautifulSoup) -> list:
@@ -60,20 +61,16 @@ def get_messages(soup: BeautifulSoup):
     messages = []
     paginator = soup.select_one("div.pagination a.page-numbers")
     # print(paginator.get_text(strip=True))
-    if paginator:
-        for row in soup.select("tbody tr"):
-            from_td = row.select_one("td:nth-of-type(1)")
-            text_td = row.select_one("td:nth-of-type(2)")
-            date_td = row.select_one("td:nth-of-type(3)")
-
-            if not (from_td and text_td and date_td):
-                continue  # Пропускаем строки, где нет нужных данных
-
-            messages.append({
-                "from": from_td.get_text(strip=True),
-                "text": text_td.get_text(" ", strip=True),
-                "date": date_td.get_text(strip=True)
-            })
-
+    for row in soup.select("tbody tr"):
+        from_td = row.select_one("td:nth-of-type(1)")
+        text_td = row.select_one("td:nth-of-type(2)")
+        date_td = row.select_one("td:nth-of-type(3)")
+        if not (from_td and text_td and date_td) or text_to_seconds(date_td.get_text(strip=True)) > 300:
+            continue  # Пропускаем строки, где нет нужных данных
+        messages.append({
+            "from": from_td.get_text(strip=True),
+            "text": text_td.get_text(" ", strip=True),
+            "date": date_td.get_text(strip=True)
+        })
 
     return messages
