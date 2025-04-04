@@ -11,6 +11,7 @@ if data:
 else:
     print("Данные не найдены в Redis")
     exit()
+# print(data)
 
 active_numbers_links = [num["link"] for country_data in filtered_data for num in country_data["active_numbers"]]
 inactive_numbers_links = [num["link"] for country_data in filtered_data for num in country_data["inactive_numbers"]]
@@ -19,6 +20,6 @@ inactive_numbers_links = [num["link"] for country_data in filtered_data for num 
 messages_data = {}
 for link in active_numbers_links:
     soup = fetch_page(link)
-    messages_data[link] = get_messages(soup)
+    messages_data[link.rstrip('/').split('/')[-1]] = get_messages(soup)
 
 print(json.dumps(messages_data, indent=4, ensure_ascii=False))
