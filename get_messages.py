@@ -19,7 +19,7 @@ def process_data():
     data = redis_client.get("filtered_numbers")
     if data:
         filtered_data = json.loads(data)
-        print("Данные загружены!")
+        print("Загружены данные из Redis!")
     else:
         print("Данные не найдены в Redis")
         return
