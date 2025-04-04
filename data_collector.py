@@ -57,4 +57,3 @@ def get_messages(soup: BeautifulSoup):
     :param soup: BeautifulSoup object
     :return: list of dictionaries with country data
     """
-    pass
