@@ -26,7 +26,6 @@ def process_data():
 
     # Извлекаем ссылки на активные и неактивные номера
     active_numbers_links = [num["link"] for country_data in filtered_data for num in country_data["active_numbers"]]
-    inactive_numbers_links = [num["link"] for country_data in filtered_data for num in country_data["inactive_numbers"]]
 
     messages_data = {}
 
