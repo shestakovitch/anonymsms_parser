@@ -1,24 +1,11 @@
 import redis
 import json
+import time
 from scraper import fetch_page
 from data_collector import get_messages
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 redis_client = redis.Redis(host='localhost', port=6379, db=0, decode_responses=True)
-
-# Получаем данные из Redis
-data = redis_client.get("filtered_numbers")
-if data:
-    filtered_data = json.loads(data)
-    print("Данные загружены!")
-else:
-    print("Данные не найдены в Redis")
-    exit()
-
-# Извлекаем ссылки на активные и неактивные номера
-active_numbers_links = [num["link"] for country_data in filtered_data for num in country_data["active_numbers"]]
-inactive_numbers_links = [num["link"] for country_data in filtered_data for num in country_data["inactive_numbers"]]
-
 
 # Функция для извлечения сообщений с одной страницы
 def process_link(link):
@@ -26,9 +13,21 @@ def process_link(link):
     messages = get_messages(soup)
     return link.rstrip('/').split('/')[-1], messages
 
-
 # Многопоточная обработка
-def main():
+def process_data():
+    # Получаем данные из Redis
+    data = redis_client.get("filtered_numbers")
+    if data:
+        filtered_data = json.loads(data)
+        print("Данные загружены!")
+    else:
+        print("Данные не найдены в Redis")
+        return
+
+    # Извлекаем ссылки на активные и неактивные номера
+    active_numbers_links = [num["link"] for country_data in filtered_data for num in country_data["active_numbers"]]
+    inactive_numbers_links = [num["link"] for country_data in filtered_data for num in country_data["inactive_numbers"]]
+
     messages_data = {}
 
     # Используем пул потоков для обработки активных номеров
@@ -46,6 +45,10 @@ def main():
     # Выводим полученные сообщения
     print(json.dumps(messages_data, indent=4, ensure_ascii=False))
 
+def main():
+    while True:
+        process_data()
+        time.sleep(60)
 
 if __name__ == "__main__":
     main()

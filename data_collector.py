@@ -59,8 +59,6 @@ def get_messages(soup: BeautifulSoup):
     :return: list of dictionaries with country data
     """
     messages = []
-    # paginator = soup.select_one("div.pagination a.page-numbers")
-    # print(paginator.get_text(strip=True))
     for row in soup.select("tbody tr"):
         from_td = row.select_one("td:nth-of-type(1)")
         text_td = row.select_one("td:nth-of-type(2)")
