@@ -1,5 +1,4 @@
 import time
-
 import redis
 import json
 from scraper import fetch_page
@@ -8,11 +7,13 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 
 redis_client = redis.Redis(host='localhost', port=6379, db=0, decode_responses=True)
 
+
 # Функция для извлечения сообщений с одной страницы
 def process_link(link):
     soup = fetch_page(link)
     messages = get_messages(soup)
     return link.rstrip('/').split('/')[-1], messages
+
 
 # Многопоточная обработка
 def process_data():
@@ -45,8 +46,9 @@ def process_data():
     # Выводим полученные сообщения
     print(json.dumps(messages_data, indent=4, ensure_ascii=False))
 
-# Главная функция для запуска обработки сообщений
+
 def process_messages():
+    """Функция для запуска обработки сообщений, которая запускается каждую минуту"""
     while True:
         process_data()
         time.sleep(60)
