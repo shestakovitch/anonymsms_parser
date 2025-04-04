@@ -1,8 +1,13 @@
 import re
 
-# Функция для преобразования времени в секунды
-def parse_time(latest):
-    match = re.match(r"(\d+) (\w+) ago", latest)
+
+def text_to_seconds(time_in_text):
+    """
+    # Функция для преобразования времени из текста в секунды
+    :param latest:
+    :return:
+    """
+    match = re.match(r"(\d+) (\w+) ago", time_in_text)
     if not match:
         return float('inf')  # Если не удалось распарсить, считаем как неактивный
 
@@ -28,8 +33,8 @@ def filter_numbers(all_data):
         country = country_data["country"]
         numbers = country_data["numbers"]
 
-        active_numbers = [num for num in numbers if parse_time(num["latest"]) <= 120]
-        inactive_numbers = [num for num in numbers if parse_time(num["latest"]) > 120]
+        active_numbers = [num for num in numbers if text_to_seconds(num["latest"]) <= 120]
+        inactive_numbers = [num for num in numbers if text_to_seconds(num["latest"]) > 120]
 
         filtered_data.append({
             "country": country,
