@@ -4,7 +4,7 @@ import re
 def text_to_seconds(time_in_text):
     """
     # Функция для преобразования времени из текста в секунды
-    :param latest:
+    :param time_in_text:
     :return:
     """
     match = re.match(r"(\d+) (\w+) ago", time_in_text)
