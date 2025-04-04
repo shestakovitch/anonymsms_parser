@@ -33,8 +33,8 @@ def filter_numbers(all_data):
         country = country_data["country"]
         numbers = country_data["numbers"]
 
-        active_numbers = [num for num in numbers if text_to_seconds(num["latest"]) <= 120]
-        inactive_numbers = [num for num in numbers if text_to_seconds(num["latest"]) > 120]
+        active_numbers = [num for num in numbers if text_to_seconds(num["latest"]) <= 7200]
+        inactive_numbers = [num for num in numbers if text_to_seconds(num["latest"]) > 7200]
 
         filtered_data.append({
             "country": country,
