@@ -35,7 +35,7 @@ def main():
             print(f"Ошибка: {e}")
 
         # Пауза на 1 час (3600 секунд)
-        time.sleep(3600)  # Пауза 1 час
+        time.sleep(3600)
 
 if __name__ == "__main__":
     main()
