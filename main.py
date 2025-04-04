@@ -1,6 +1,6 @@
 import json
 import redis
-from config import url
+from config import URL
 from scraper import fetch_page
 from data_collector import get_numbers
 from time_parsing import filter_numbers
@@ -11,7 +11,7 @@ redis_client = redis.Redis(host='localhost', port=6379, db=0, decode_responses=T
 def main():
     try:
         # Загрузка страницы
-        soup = fetch_page(url)
+        soup = fetch_page(URL)
         # Получаем список номеров
         data = get_numbers(soup)
 

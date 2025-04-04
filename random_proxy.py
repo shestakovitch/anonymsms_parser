@@ -1,10 +1,7 @@
 import random
 import time
 import json
-
-PROXY_FILE = "proxies.txt"
-BLOCKED_FILE = "blocked_proxies.json"
-
+from config import PROXY_FILE, BLOCKED_FILE
 
 def load_data():
     """Загружает список прокси и заблокированные прокси из файлов."""

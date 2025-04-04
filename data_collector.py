@@ -1,6 +1,6 @@
 from bs4 import BeautifulSoup
 from scraper import fetch_page
-from config import url
+from config import URL
 from time_parsing import text_to_seconds
 
 
@@ -34,7 +34,7 @@ def get_numbers(soup: BeautifulSoup):
     data = []  # Храним данные всех стран
 
     for country in countries_list:
-        soup = fetch_page(url=url + country)
+        soup = fetch_page(url=URL + country)
         country_data = {
             "country": country,
             "numbers": [
