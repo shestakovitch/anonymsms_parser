@@ -1,3 +1,5 @@
+import time
+
 import redis
 import json
 from scraper import fetch_page
@@ -45,4 +47,6 @@ def process_data():
 
 # Главная функция для запуска обработки сообщений
 def process_messages():
-    process_data()
+    while True:
+        process_data()
+        time.sleep(60)
