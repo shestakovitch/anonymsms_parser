@@ -5,10 +5,10 @@ from scraper import fetch_page
 from data_collector import get_numbers
 from time_parsing import filter_numbers
 import time
+from get_messages import process_messages  # Импортируем функцию из get_messages.py
 
 # Подключение к Redis
 redis_client = redis.Redis(host='localhost', port=6379, db=0, decode_responses=True)
-
 
 def main():
     while True:
@@ -27,12 +27,15 @@ def main():
 
             print("Данные сохранены в Redis!")
 
+            # Запускаем функцию из второго скрипта для получения сообщений
+            print("Запуск обработки сообщений...")
+            process_messages()  # Вызываем функцию из get_messages.py
+
         except Exception as e:
             print(f"Ошибка: {e}")
 
         # Пауза на 1 час (3600 секунд)
         time.sleep(3600)  # Пауза 1 час
-
 
 if __name__ == "__main__":
     main()

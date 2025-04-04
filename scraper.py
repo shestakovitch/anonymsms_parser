@@ -20,10 +20,8 @@ def fetch_page(url):
 
         try:
             response = requests.get(url, headers=headers, proxies=proxies, timeout=5)
-            # print(f"Используем прокси: {proxy}")
             return BeautifulSoup(response.text, "lxml")
 
         except requests.RequestException as e:
-            # Ошибка с прокси, блокируем и пробуем другой
             print(f"Ошибка с прокси {proxy}: {e}. Блокируем и пробуем другой.")
             block_proxy(proxy)

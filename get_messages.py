@@ -1,6 +1,5 @@
 import redis
 import json
-import time
 from scraper import fetch_page
 from data_collector import get_messages
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -44,10 +43,6 @@ def process_data():
     # Выводим полученные сообщения
     print(json.dumps(messages_data, indent=4, ensure_ascii=False))
 
-def main():
-    while True:
-        process_data()
-        time.sleep(60)
-
-if __name__ == "__main__":
-    main()
+# Главная функция для запуска обработки сообщений
+def process_messages():
+    process_data()
