@@ -9,6 +9,8 @@ from get_messages import process_messages  # Импортируем функци
 
 # Подключение к Redis
 redis_client = redis.Redis(host='localhost', port=6379, db=0, decode_responses=True)
+# redis_client.flushdb() # Очистка БД
+
 
 def main():
     while True:

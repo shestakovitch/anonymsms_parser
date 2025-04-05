@@ -54,7 +54,7 @@ def get_numbers(soup: BeautifulSoup):
 
 def get_messages(soup: BeautifulSoup):
     """
-    Функция получает информацию о сообщениях активных номеров
+    Функция получает сообщения, которые пришли на активные номера за последние 5 минут
     :param soup: BeautifulSoup object
     :return: list of dictionaries with country data
     """

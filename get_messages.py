@@ -1,6 +1,7 @@
 import time
 import redis
 import json
+from datetime import datetime
 from scraper import fetch_page
 from data_collector import get_messages
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -12,6 +13,12 @@ redis_client = redis.Redis(host='localhost', port=6379, db=0, decode_responses=T
 def process_link(link):
     soup = fetch_page(link)
     messages = get_messages(soup)
+
+    # Добавляем время проверки для каждого сообщения
+    timestamp = datetime.now().strftime("%H:%M:%S %d-%m-%Y")
+    for message in messages:
+        message['checked_at'] = timestamp  # Добавляем поле с временем проверки
+
     return link.rstrip('/').split('/')[-1], messages
 
 
