@@ -26,7 +26,7 @@ def process_data():
         print("Данные не найдены в Redis")
         return
 
-    # Извлекаем ссылки на активные и неактивные номера
+    # Извлекаем ссылки на активные номера
     active_numbers_links = [num["link"] for country_data in filtered_data for num in country_data["active_numbers"]]
 
     messages_data = {}
