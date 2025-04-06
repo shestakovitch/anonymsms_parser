@@ -1,6 +1,6 @@
 from bs4 import BeautifulSoup
 from scraper import fetch_page
-from config import URL
+from config import BASE_URL
 from time_parsing import text_to_seconds
 
 
@@ -26,7 +26,6 @@ def get_numbers(soup: BeautifulSoup):
     """
     Функция получает список номеров со ссылками и с данными о последнем обновлении
     для всех стран.
-
     :param soup: BeautifulSoup object
     :return: list of dictionaries with country data
     """
@@ -34,7 +33,7 @@ def get_numbers(soup: BeautifulSoup):
     data = []  # Храним данные всех стран
 
     for country in countries_list:
-        soup = fetch_page(url=URL + country)
+        soup = fetch_page(url=BASE_URL + country)
         country_data = {
             "country": country,
             "numbers": [

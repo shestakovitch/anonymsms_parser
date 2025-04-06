@@ -1,6 +1,6 @@
 import json
 import redis
-from config import URL
+from config import BASE_URL
 from scraper import fetch_page
 from data_collector import get_numbers
 from time_parsing import filter_numbers
@@ -16,7 +16,7 @@ def main():
     while True:
         try:
             print("Загружаем страницу")
-            soup = fetch_page(URL)
+            soup = fetch_page(BASE_URL)
 
             print("Получаем список стран и номеров")
             data = get_numbers(soup)
