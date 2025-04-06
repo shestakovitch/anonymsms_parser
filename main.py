@@ -20,7 +20,6 @@ def main():
 
             print("Получаем список стран и номеров")
             data = get_numbers(soup)
-
             print("Фильтруем данные")
             filtered_data = filter_numbers(data)
 
