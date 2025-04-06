@@ -28,13 +28,18 @@ def process_data():
     data = redis_client.get("filtered_numbers")
     if data:
         filtered_data = json.loads(data)
-        print("Загружены данные из Redis!")
+        print("Загружаем данные из Redis!")
     else:
         print("Данные не найдены в Redis")
         return
 
-    # Извлекаем ссылки на активные номера
-    active_numbers_links = [num["link"] for country_data in filtered_data for num in country_data["active_numbers"]]
+    # Извлекаем ссылки только активных номеров
+    active_numbers_links = [
+        num["link"]
+        for country_data in filtered_data
+        for num in country_data
+        if num.get("status") == "active"
+    ]
 
     messages_data = {}
 

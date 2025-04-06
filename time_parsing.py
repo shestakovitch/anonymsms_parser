@@ -19,27 +19,3 @@ def text_to_seconds(time_in_text):
     }
 
     return value * conversion.get(unit, float('inf'))
-
-
-def filter_numbers(all_data):
-    """
-    Фильтрует номера по активности
-    :param all_data: список словарей с данными по странам
-    :return: список стран с разделением номеров на активные/неактивные
-    """
-    filtered_data = []
-
-    for country_data in all_data:
-        country = country_data["country"]
-        numbers = country_data["numbers"]
-
-        active_numbers = [num for num in numbers if text_to_seconds(num["latest"]) <= 7200]
-        inactive_numbers = [num for num in numbers if text_to_seconds(num["latest"]) > 7200]
-
-        filtered_data.append({
-            "country": country,
-            "active_numbers": active_numbers,
-            "inactive_numbers": inactive_numbers
-        })
-
-    return filtered_data

@@ -34,19 +34,32 @@ def get_numbers(soup: BeautifulSoup):
 
     for country in countries_list:
         soup = fetch_page(url=BASE_URL + country)
-        country_data = {
-            "country": country,
-            "numbers": [
-                {
-                    "link": card.select_one('.sms-card__number a')['href'],
-                    "phone_number": card.select_one('.sms-card__number a').get_text(strip=True),
-                    "latest": card.select_one('.sms-card__item:-soup-contains("schedule") .text--bold').get_text(
-                        strip=True)
-                }
-                for card in soup.select('.sms-card')
-            ]
-        }
-        data.append(country_data)
+        country_data = [{
+                "link": card.select_one('.sms-card__number a')['href'],
+                "phone_number": card.select_one('.sms-card__number a').get_text(strip=True),
+                "latest": (
+                    card.select_one('.sms-card__item:-soup-contains("schedule") .text--bold')
+                    .get_text(strip=True)
+                    if card.select_one('.sms-card__item:-soup-contains("schedule") .text--bold') else None
+                ),
+                "added": (
+                    card.select_one('.sms-card__item:-soup-contains("add_circle") .text--bold')
+                    .get_text(strip=True)
+                    if card.select_one('.sms-card__item:-soup-contains("add_circle") .text--bold') else None
+                ),
+                "status": (
+                    "active"
+                    if card.select_one('.sms-card__item:-soup-contains("schedule") .text--bold')
+                       and text_to_seconds(
+                        card.select_one('.sms-card__item:-soup-contains("schedule") .text--bold').get_text(
+                            strip=True)) <= 7200
+                    else "inactive"
+                )
+            }
+            for card in soup.select('.sms-card')
+        ]
+        if country_data:
+            data.append(country_data)
 
     return data
 

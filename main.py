@@ -3,7 +3,6 @@ import redis
 from config import BASE_URL
 from scraper import fetch_page
 from data_collector import get_numbers
-from time_parsing import filter_numbers
 import time
 from get_messages import process_messages  # Импортируем функцию из get_messages.py
 
@@ -20,11 +19,9 @@ def main():
 
             print("Получаем список стран и номеров")
             data = get_numbers(soup)
-            print("Фильтруем данные")
-            filtered_data = filter_numbers(data)
 
             # Сохраняем в Redis
-            redis_client.set("filtered_numbers", json.dumps(filtered_data, ensure_ascii=False))
+            redis_client.set("filtered_numbers", json.dumps(data, ensure_ascii=False))
 
             print("Данные сохранены в Redis!")
 
