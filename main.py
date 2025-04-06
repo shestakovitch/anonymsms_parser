@@ -4,7 +4,7 @@ from config import BASE_URL
 from scraper import fetch_page
 from data_collector import get_numbers
 import time
-from get_messages import process_messages  # Импортируем функцию из get_messages.py
+from get_data import process_messages  # Импортируем функцию из get_data.py
 
 # Подключение к Redis
 redis_client = redis.Redis(host='localhost', port=6379, db=0, decode_responses=True)
@@ -27,7 +27,7 @@ def main():
 
             # Запускаем функцию из второго скрипта для получения сообщений
             print("Запуск обработки сообщений...")
-            process_messages()  # Вызываем функцию из get_messages.py
+            process_messages()  # Вызываем функцию из get_data.py
 
         except Exception as e:
             print(f"Ошибка: {e}")
