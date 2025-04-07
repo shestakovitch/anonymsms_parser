@@ -10,88 +10,53 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 redis_client = redis.Redis(host='localhost', port=6379, db=0, decode_responses=True)
 
 
+def get_timestamp(msg):
+    try:
+        checked = datetime.strptime(msg.get("checked_at", ""), "%H:%M:%S %d-%m-%Y")
+        seconds_ago = text_to_seconds(msg.get("date", "9999 years ago"))
+        return checked - timedelta(seconds=seconds_ago)
+    except:
+        return datetime.min
+
+
 def process_link(link):
     soup = fetch_page(link)
     messages = get_messages(soup)
-
-    timestamp = datetime.now().strftime("%H:%M:%S %d-%m-%Y")
-    for message in messages:
-        message['checked_at'] = timestamp
-
-    number_id = link.rstrip('/').split('/')[-1]
-    return number_id, messages
+    now = datetime.now().strftime("%H:%M:%S %d-%m-%Y")
+    for msg in messages:
+        msg['checked_at'] = now
+    return link.rstrip('/').split('/')[-1], messages
 
 
 def process_data():
     print("Запуск обработки данных...")
-    data = redis_client.get("filtered_numbers")
-    if data:
-        filtered_data = json.loads(data)
-        print("Загружены данные из Redis.")
-    else:
+    raw = redis_client.get("filtered_numbers")
+    if not raw:
         print("Данные в Redis не найдены.")
         return
 
-    active_numbers_links = [
-        num["link"]
-        for country_data in filtered_data
-        for num in country_data
-        if num.get("status") == "active"
-    ]
-
-    print(f"Найдено активных номеров: {len(active_numbers_links)}")
-    if not active_numbers_links:
-        print("Активные номера отсутствуют.")
+    filtered = json.loads(raw)
+    links = [num["link"] for c in filtered for num in c if num.get("status") == "active"]
+    print(f"Найдено активных номеров: {len(links)}")
+    if not links:
         return
 
-    messages_data = {}
-    existing_raw = redis_client.get("messages_data")
-    if existing_raw:
-        messages_data = json.loads(existing_raw)
-        print("Загружены ранее сохранённые сообщения.")
+    messages_data = json.loads(redis_client.get("messages_data") or "{}")
 
     with ThreadPoolExecutor(max_workers=4) as executor:
-        futures = [executor.submit(process_link, link) for link in active_numbers_links]
-
-        for future in as_completed(futures):
+        for future in as_completed([executor.submit(process_link, link) for link in links]):
             try:
-                number_id, new_messages = future.result()
-                existing_messages = messages_data.get(number_id, [])
+                number_id, new_msgs = future.result()
+                old_msgs = messages_data.get(number_id, [])
 
-                existing_set = {
-                    (m.get("from"), m.get("text"))
-                    for m in existing_messages
-                    if m.get("from") and m.get("text")
-                }
+                known = {(m["from"], m["text"]) for m in old_msgs if m.get("from") and m.get("text")}
+                unique_new = [m for m in new_msgs if (m.get("from"), m.get("text")) not in known]
 
-                new_unique = [
-                    m for m in new_messages
-                    if m.get("from") and m.get("text") and (m["from"], m["text"]) not in existing_set
-                ]
-
-                combined = existing_messages + new_unique
-
-                # Сортировка по возрасту сообщения (от старого к новому)
-                def get_message_timestamp(message):
-                    """
-                    Возвращает точное время получения сообщения как datetime, на основе date и checked_at
-                    """
-                    date_text = message.get("date", "9999 years ago")
-                    checked_at_str = message.get("checked_at")
-
-                    try:
-                        checked_at = datetime.strptime(checked_at_str, "%H:%M:%S %d-%m-%Y")
-                        seconds_ago = text_to_seconds(date_text)
-                        return checked_at - timedelta(seconds=seconds_ago)
-                    except Exception:
-                        return datetime.min  # для некорректных значений — ставим в начало
-
-                combined = existing_messages + new_unique
-                combined.sort(key=get_message_timestamp)
+                combined = old_msgs + unique_new
+                combined.sort(key=get_timestamp)
                 messages_data[number_id] = combined
-
             except Exception as e:
-                print(f"Ошибка при обработке номера: {e}")
+                print(f"Ошибка: {e}")
 
     print(json.dumps(messages_data, indent=4, ensure_ascii=False))
     redis_client.set("messages_data", json.dumps(messages_data, ensure_ascii=False, indent=2))
