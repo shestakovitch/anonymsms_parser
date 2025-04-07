@@ -1,13 +1,22 @@
 import time
-import redis
 import json
-from data_collector import get_messages, process_link, get_timestamp
+from data_collector import process_link, get_timestamp
 from concurrent.futures import ThreadPoolExecutor, as_completed
-
-redis_client = redis.Redis(host='localhost', port=6379, db=0, decode_responses=True)
+from redis_client import redis_client
 
 
 def process_data():
+    """
+    Обрабатывает данные, полученные из Redis:
+    - Извлекает фильтрованные номера, сохраняет только те, у которых статус 'active'.
+    - Для каждого активного номера вызывает функцию обработки ссылок в многозадачном режиме (пул потоков).
+    - Объединяет старые и новые сообщения для каждого номера, сортирует их по времени и сохраняет обратно в Redis.
+    Во время работы функция:
+    - Проверяет наличие необходимых данных в Redis.
+    - Обрабатывает ошибки, если они возникают при извлечении и обработке данных.
+    - Сохраняет итоговые данные сообщений в Redis для дальнейшего использования.
+    :return: None
+    """
     print("Запуск обработки данных...")
     raw = redis_client.get("filtered_numbers")
     if not raw:
@@ -43,6 +52,12 @@ def process_data():
 
 
 def process_messages():
+    """
+    Запускает бесконечный цикл обработки данных каждую минуту:
+    - Каждый цикл вызывает функцию обработки данных process_data.
+    - После обработки данных делает паузу на 60 секунд перед следующим циклом.
+    :return: None
+    """
     while True:
         process_data()
         time.sleep(60)

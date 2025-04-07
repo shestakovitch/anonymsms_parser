@@ -1,35 +1,29 @@
-import os
 import json
-import redis
 import time
-from dotenv import load_dotenv
 from config import BASE_URL
 from scraper import fetch_page
 from data_collector import get_numbers
 from get_data import process_messages
-
-# Загружаем переменные окружения
-load_dotenv()
-
-REDIS_HOST = os.getenv("REDIS_HOST")
-REDIS_PORT = os.getenv("REDIS_PORT")
-REDIS_USERNAME = os.getenv("REDIS_USERNAME")
-REDIS_PASSWORD = os.getenv("REDIS_PASSWORD")
-
-# Подключение к Redis
-redis_client = redis.Redis(
-    host=REDIS_HOST,
-    port=REDIS_PORT,
-    username=REDIS_USERNAME,
-    password=REDIS_PASSWORD,
-    decode_responses=True
-)
-
-# Очистка БД
-redis_client.flushdb()
+from redis_client import redis_client
 
 
 def main():
+    """
+    Главная функция для выполнения следующих шагов:
+    - Очищает базу данных Redis.
+    - В бесконечном цикле загружает страницу, получает данные и сохраняет их в Redis.
+    - Запускает обработку сообщений с использованием внешней функции process_messages из другого скрипта.
+    В процессе работы:
+    - Каждый цикл начинается с очистки Redis.
+    - Скачивает страницу с номерами, извлекает необходимые данные, и сохраняет их в Redis.
+    - Запускает функцию обработки сообщений, которая будет обновлять информацию о номерах.
+    - В случае ошибки выводит сообщение об ошибке.
+    - После выполнения каждого цикла делает паузу на 1 час перед повторной загрузкой данных.
+    :return: None
+    """
+    # Очистка БД
+    redis_client.flushdb()
+
     while True:
         try:
             print("Загружаем страницу")

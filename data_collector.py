@@ -113,7 +113,7 @@ def get_messages(soup: BeautifulSoup):
             continue  # Пропускаем строки, где нет нужных данных
         messages.append({
             "from": from_td.get_text(strip=True),
-            "text": text_td.get_text(" ", strip=True),
+            "text": text_td.get_text(separator=" ", strip=True),
             "date": date_td.get_text(strip=True)
         })
 
