@@ -24,25 +24,43 @@ def process_data():
         return
 
     filtered = json.loads(raw)
-    links = [num["link"] for c in filtered for num in c if num.get("status") == "active"]
+    links = [
+        num["link"]
+        for country_data in filtered
+        for country_info in country_data.values()
+        for num in country_info["numbers"]
+        if num.get("status") == "active"
+    ]
     print(f"Найдено активных номеров: {len(links)}")
     if not links:
         return
 
     messages_data = json.loads(redis_client.get("messages_data") or "{}")
 
+    # Собираем мапу номера -> страна
+    number_country = {
+        number["phone_number"].lstrip("+"): country
+        for entry in filtered
+        for country, data in entry.items()
+        for number in data["numbers"]
+        if number.get("status") == "active"
+    }
+
     with ThreadPoolExecutor(max_workers=4) as executor:
-        for future in as_completed([executor.submit(process_link, link) for link in links]):
+        futures = [executor.submit(process_link, link) for link in links]
+        for future in as_completed(futures):
             try:
                 number_id, new_msgs = future.result()
-                old_msgs = messages_data.get(number_id, [])
+                country = number_country.get(number_id, "unknown")
 
+                messages_data.setdefault(country, {})
+                old_msgs = messages_data[country].get(number_id, [])
                 known = {(m["from"], m["text"]) for m in old_msgs if m.get("from") and m.get("text")}
-                unique_new = [m for m in new_msgs if (m.get("from"), m.get("text")) not in known]
+                unique = [m for m in new_msgs if (m.get("from"), m.get("text")) not in known]
 
-                combined = old_msgs + unique_new
-                combined.sort(key=get_timestamp)
-                messages_data[number_id] = combined
+                combined = sorted(old_msgs + unique, key=get_timestamp)
+                messages_data[country][number_id] = combined
+
             except Exception as e:
                 print(f"Ошибка: {e}")
 

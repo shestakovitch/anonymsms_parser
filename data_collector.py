@@ -56,7 +56,8 @@ def get_numbers(soup: BeautifulSoup):
 
     for country in countries_list:
         soup = fetch_page(url=BASE_URL + country)
-        country_data = [{
+        country_data = {country:
+            {"numbers": [{
             "link": card.select_one('.sms-card__number a')['href'],
             "phone_number": card.select_one('.sms-card__number a').get_text(strip=True),
             "latest": (
@@ -80,6 +81,8 @@ def get_numbers(soup: BeautifulSoup):
         }
             for card in soup.select('.sms-card')
         ]
+            }
+        }
         if country_data:
             data.append(country_data)
 
