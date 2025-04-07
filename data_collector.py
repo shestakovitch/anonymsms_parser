@@ -3,6 +3,7 @@ from datetime import datetime, timedelta
 from scraper import fetch_page
 from config import BASE_URL
 from time_parsing import text_to_seconds
+from redis_client import redis_client
 
 
 def get_countries(soup: BeautifulSoup) -> list:
@@ -35,7 +36,6 @@ def get_countries(soup: BeautifulSoup) -> list:
 def get_numbers(soup: BeautifulSoup):
     """
     Извлекает список телефонных номеров с дополнительной информацией для каждой страны.
-
     Функция выполняет следующее:
     1. Получает список всех стран с помощью функции `get_countries`.
     2. Для каждой страны делает запрос к соответствующей странице.
@@ -45,16 +45,11 @@ def get_numbers(soup: BeautifulSoup):
        - Время последнего обновления сообщений ("latest")
        - Время добавления номера ("added")
        - Статус номера: "active", если последнее сообщение было не старше 2 часов (7200 секунд), иначе — "inactive"
-    4. Возвращает список всех стран с их активными/неактивными номерами и сопутствующими данными.
+    4. Сохраняет текущий timestamp в Redis.
+    5. Возвращает список всех стран с их активными/неактивными номерами и сопутствующими данными.
 
-    :param soup: Объект BeautifulSoup главной страницы, с которой начинается сбор стран
+    :param soup: Объект BeautifulSoup главной страницы
     :return: Список списков словарей — по одной вложенной записи (стране) на каждый набор номеров.
-             Пример:
-             [
-                 [ {номер1}, {номер2}, ... ],  # страна 1
-                 [ {номер1}, {номер2}, ... ],  # страна 2
-                 ...
-             ]
     """
     countries_list = get_countries(soup)
     data = []  # Храним данные всех стран

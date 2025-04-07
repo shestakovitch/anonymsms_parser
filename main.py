@@ -1,5 +1,6 @@
 import json
 import time
+from datetime import datetime
 from config import BASE_URL
 from scraper import fetch_page
 from data_collector import get_numbers
@@ -16,6 +17,7 @@ def main():
     В процессе работы:
     - Каждый цикл начинается с очистки Redis.
     - Скачивает страницу с номерами, извлекает необходимые данные, и сохраняет их в Redis.
+    - Дополнительно сохраняет временную метку начала сбора данных в Redis под ключом "last_updated".
     - Запускает функцию обработки сообщений, которая будет обновлять информацию о номерах.
     - В случае ошибки выводит сообщение об ошибке.
     - После выполнения каждого цикла делает паузу на 1 час перед повторной загрузкой данных.
@@ -32,13 +34,16 @@ def main():
             print("Получаем список стран и номеров")
             data = get_numbers(soup)
 
-            # Сохраняем в Redis
+            # Сохраняем данные в Redis
             redis_client.set("filtered_numbers", json.dumps(data, ensure_ascii=False))
-            print("Данные сохранены в Redis!")
 
-            # Запускаем функцию из второго скрипта для получения сообщений
+            # Добавляем timestamp обновления
+            timestamp = datetime.now().strftime("%H:%M:%S %d-%m-%Y")
+            redis_client.set("last_updated", timestamp)
+
+            print("Данные и время последнего обновления сохранены в Redis!")
             print("Запуск обработки сообщений...")
-            process_messages()  # Вызываем функцию из get_data.py
+            process_messages()
 
         except Exception as e:
             print(f"Ошибка: {e}")
