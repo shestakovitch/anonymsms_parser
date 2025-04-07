@@ -1,31 +1,10 @@
 import time
 import redis
 import json
-from datetime import datetime, timedelta
-from scraper import fetch_page
-from data_collector import get_messages
-from time_parsing import text_to_seconds
+from data_collector import get_messages, process_link, get_timestamp
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 redis_client = redis.Redis(host='localhost', port=6379, db=0, decode_responses=True)
-
-
-def get_timestamp(msg):
-    try:
-        checked = datetime.strptime(msg.get("checked_at", ""), "%H:%M:%S %d-%m-%Y")
-        seconds_ago = text_to_seconds(msg.get("date", "9999 years ago"))
-        return checked - timedelta(seconds=seconds_ago)
-    except:
-        return datetime.min
-
-
-def process_link(link):
-    soup = fetch_page(link)
-    messages = get_messages(soup)
-    now = datetime.now().strftime("%H:%M:%S %d-%m-%Y")
-    for msg in messages:
-        msg['checked_at'] = now
-    return link.rstrip('/').split('/')[-1], messages
 
 
 def process_data():
