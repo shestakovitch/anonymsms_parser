@@ -1,15 +1,5 @@
-import os
-
 import redis
-from dotenv import load_dotenv
-
-# Загружаем переменные окружения
-load_dotenv()
-
-REDIS_HOST = os.getenv("REDIS_HOST")
-REDIS_PORT = os.getenv("REDIS_PORT")
-REDIS_USERNAME = os.getenv("REDIS_USERNAME")
-REDIS_PASSWORD = os.getenv("REDIS_PASSWORD")
+from config import REDIS_HOST, REDIS_PORT, REDIS_USERNAME, REDIS_PASSWORD
 
 # Подключение к Redis
 redis_client = redis.Redis(

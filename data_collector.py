@@ -3,7 +3,6 @@ from datetime import datetime, timedelta
 from scraper import fetch_page
 from config import BASE_URL
 from time_parsing import text_to_seconds
-from redis_client import redis_client
 
 
 def get_countries(soup: BeautifulSoup) -> list:
@@ -58,29 +57,29 @@ def get_numbers(soup: BeautifulSoup):
         soup = fetch_page(url=BASE_URL + country)
         country_data = {country:
             {"numbers": [{
-            "link": card.select_one('.sms-card__number a')['href'],
-            "phone_number": card.select_one('.sms-card__number a').get_text(strip=True),
-            "latest": (
-                card.select_one('.sms-card__item:-soup-contains("schedule") .text--bold')
-                .get_text(strip=True)
-                if card.select_one('.sms-card__item:-soup-contains("schedule") .text--bold') else None
-            ),
-            "added": (
-                card.select_one('.sms-card__item:-soup-contains("add_circle") .text--bold')
-                .get_text(strip=True)
-                if card.select_one('.sms-card__item:-soup-contains("add_circle") .text--bold') else None
-            ),
-            "status": (
-                "active"
-                if card.select_one('.sms-card__item:-soup-contains("schedule") .text--bold')
-                   and text_to_seconds(
-                    card.select_one('.sms-card__item:-soup-contains("schedule") .text--bold').get_text(
-                        strip=True)) <= 7200
-                else "inactive"
-            )
-        }
-            for card in soup.select('.sms-card')
-        ]
+                "link": card.select_one('.sms-card__number a')['href'],
+                "phone_number": card.select_one('.sms-card__number a').get_text(strip=True),
+                "latest": (
+                    card.select_one('.sms-card__item:-soup-contains("schedule") .text--bold')
+                    .get_text(strip=True)
+                    if card.select_one('.sms-card__item:-soup-contains("schedule") .text--bold') else None
+                ),
+                "added": (
+                    card.select_one('.sms-card__item:-soup-contains("add_circle") .text--bold')
+                    .get_text(strip=True)
+                    if card.select_one('.sms-card__item:-soup-contains("add_circle") .text--bold') else None
+                ),
+                "status": (
+                    "active"
+                    if card.select_one('.sms-card__item:-soup-contains("schedule") .text--bold')
+                       and text_to_seconds(
+                        card.select_one('.sms-card__item:-soup-contains("schedule") .text--bold').get_text(
+                            strip=True)) <= 7200
+                    else "inactive"
+                )
+            }
+                for card in soup.select('.sms-card')
+            ]
             }
         }
         if country_data:

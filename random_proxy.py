@@ -3,6 +3,7 @@ import time
 import json
 from config import PROXY_FILE, BLOCKED_FILE
 
+
 def load_data():
     """Загружает список прокси и заблокированные прокси из файлов."""
     try:
