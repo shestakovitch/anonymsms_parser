@@ -35,7 +35,9 @@ def process_data():
     if not links:
         return
 
-    messages_data = json.loads(redis_client.get("messages_data") or "{}")
+    # Получаем старые и новые сообщения из Redis
+    messages_data_old = json.loads(redis_client.get("messages_data_old") or "{}")
+    messages_data_new = json.loads(redis_client.get("messages_data_new") or "{}")
 
     # Собираем мапу номера -> страна
     number_country = {
@@ -46,6 +48,7 @@ def process_data():
         if number.get("status") == "active"
     }
 
+    print("Обработка сообщений для активных номеров...")
     with ThreadPoolExecutor(max_workers=4) as executor:
         futures = [executor.submit(process_link, link) for link in links]
         for future in as_completed(futures):
@@ -53,20 +56,40 @@ def process_data():
                 number_id, new_msgs = future.result()
                 country = number_country.get(number_id, "unknown")
 
-                messages_data.setdefault(country, {})
-                old_msgs = messages_data[country].get(number_id, [])
+                messages_data_new.setdefault(country, {})
+                old_msgs = messages_data_old.get(country, {}).get(number_id, [])
 
+                # Множество старых сообщений (from, text) для быстрого поиска
                 known = {(m["from"], m["text"]) for m in old_msgs if m.get("from") and m.get("text")}
+
+                # Фильтруем только новые сообщения, которых нет в известных
                 unique = [m for m in new_msgs if (m.get("from"), m.get("text")) not in known]
 
+                # Сортируем по времени
                 sorted_new = sorted(unique, key=get_timestamp)
-                messages_data[country][number_id] = sorted_new
+
+                # Добавляем новые сообщения к старым
+                if sorted_new:
+                    messages_data_new[country][number_id] = sorted_new
 
             except Exception as e:
                 print(f"Ошибка: {e}")
 
-    print(json.dumps(messages_data, indent=4, ensure_ascii=False))
-    redis_client.set("messages_data", json.dumps(messages_data, ensure_ascii=False, indent=2))
+    # Обновляем старые данные с учётом новых сообщений
+    print("Обновление старых сообщений...")
+    for country, country_data in messages_data_new.items():
+        for number_id, new_msgs in country_data.items():
+            # Добавляем новые сообщения в старые
+            messages_data_old.setdefault(country, {})
+            old_msgs = messages_data_old[country].get(number_id, [])
+            messages_data_old[country][number_id] = old_msgs + new_msgs
+
+    # Сохраняем обновлённые данные в Redis
+    print("Сохранение данных в Redis...")
+    redis_client.set("messages_data_old", json.dumps(messages_data_old, ensure_ascii=False, indent=2))
+    redis_client.set("messages_data_new", json.dumps(messages_data_new, ensure_ascii=False, indent=2))
+
+    print(json.dumps(messages_data_new, indent=4, ensure_ascii=False))
     print("Сообщения успешно сохранены в Redis.\n")
 
 
@@ -79,4 +102,5 @@ def process_messages():
     """
     while True:
         process_data()
+        print("Ожидание 60 секунд перед следующим циклом...")
         time.sleep(60)
