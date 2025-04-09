@@ -18,6 +18,8 @@ def process_data():
     :return: None
     """
     print("Запуск обработки данных...")
+
+    # Извлекаем данные о фильтрованных номерах из Redis
     raw = redis_client.get("filtered_numbers")
     if not raw:
         print("Данные в Redis не найдены.")
@@ -35,9 +37,16 @@ def process_data():
     if not links:
         return
 
-    # Получаем старые и новые сообщения из Redis
-    messages_data_old = json.loads(redis_client.get("messages_data_old") or "{}")
-    messages_data_new = json.loads(redis_client.get("messages_data_new") or "{}")
+    # Получаем старые сообщения из Redis, если они есть
+    messages_data_old_raw = redis_client.get("messages_data_old")
+    if messages_data_old_raw:
+        messages_data_old = json.loads(messages_data_old_raw)
+        print("Старые сообщения успешно извлечены.")
+    else:
+        messages_data_old = {}
+        print("Не найдено старых сообщений в Redis, инициализируем пустой словарь.")
+
+    messages_data_new = {}
 
     # Собираем мапу номера -> страна
     number_country = {
@@ -56,6 +65,7 @@ def process_data():
                 number_id, new_msgs = future.result()
                 country = number_country.get(number_id, "unknown")
 
+                # Инициализируем данные для нового списка сообщений, если они ещё не инициализированы
                 messages_data_new.setdefault(country, {})
                 old_msgs = messages_data_old.get(country, {}).get(number_id, [])
 
@@ -65,31 +75,36 @@ def process_data():
                 # Фильтруем только новые сообщения, которых нет в известных
                 unique = [m for m in new_msgs if (m.get("from"), m.get("text")) not in known]
 
-                # Сортируем по времени
-                sorted_new = sorted(unique, key=get_timestamp)
-
-                # Добавляем новые сообщения к старым
-                if sorted_new:
+                # Если есть новые сообщения, добавляем их в список
+                if unique:
+                    sorted_new = sorted(unique, key=get_timestamp)
                     messages_data_new[country][number_id] = sorted_new
+                else:
+                    # Если новых сообщений нет, оставляем пустым
+                    messages_data_new[country][number_id] = []
 
             except Exception as e:
                 print(f"Ошибка: {e}")
 
-    # Обновляем старые данные с учётом новых сообщений
-    print("Обновление старых сообщений...")
-    for country, country_data in messages_data_new.items():
-        for number_id, new_msgs in country_data.items():
-            # Добавляем новые сообщения в старые
-            messages_data_old.setdefault(country, {})
-            old_msgs = messages_data_old[country].get(number_id, [])
-            messages_data_old[country][number_id] = old_msgs + new_msgs
+    # Объединяем старые и новые данные
+    for country, numbers in messages_data_new.items():
+        if country not in messages_data_old:
+            messages_data_old[country] = {}
 
-    # Сохраняем обновлённые данные в Redis
-    print("Сохранение данных в Redis...")
-    redis_client.set("messages_data_old", json.dumps(messages_data_old, ensure_ascii=False, indent=2))
-    redis_client.set("messages_data_new", json.dumps(messages_data_new, ensure_ascii=False, indent=2))
+        for number_id, new_msgs in numbers.items():
+            # Объединяем старые и новые сообщения для каждого номера
+            existing_msgs = messages_data_old[country].get(number_id, [])
+            updated_msgs = existing_msgs + new_msgs
+            messages_data_old[country][number_id] = updated_msgs
+
+    # Сохраняем обновлённые данные (старые + новые) в Redis
+    print("Сохранение объединённых данных в Redis...")
 
     print(json.dumps(messages_data_new, indent=4, ensure_ascii=False))
+
+    # Сохраняем объединённые данные (старые + новые) в Redis
+    redis_client.set("messages_data_old", json.dumps(messages_data_old, ensure_ascii=False, indent=2))
+
     print("Сообщения успешно сохранены в Redis.\n")
 
 
