@@ -39,7 +39,7 @@ def main():
 
             # Добавляем timestamp обновления
             timestamp = datetime.now().strftime("%H:%M:%S %d-%m-%Y")
-            redis_client.set("last_updated", timestamp)
+            redis_client.set("activity_detection_time", timestamp)
 
             print("Данные и время последнего обновления сохранены в Redis!")
             print("Запуск обработки сообщений...")
