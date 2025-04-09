@@ -1,8 +1,8 @@
 import time
 import json
 from data_collector import process_link, get_timestamp
-from concurrent.futures import ThreadPoolExecutor, as_completed
 from redis_client import redis_client
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 
 def process_data():
@@ -10,7 +10,7 @@ def process_data():
     Обрабатывает данные, полученные из Redis:
     - Извлекает фильтрованные номера, сохраняет только те, у которых статус 'active'.
     - Для каждого активного номера вызывает функцию обработки ссылок в многозадачном режиме (пул потоков).
-    - Объединяет старые и новые сообщения для каждого номера, сортирует их по времени и сохраняет обратно в Redis.
+    - Добавляет только новые сообщения для каждого номера, сортирует их по времени и сохраняет обратно в Redis.
     Во время работы функция:
     - Проверяет наличие необходимых данных в Redis.
     - Обрабатывает ошибки, если они возникают при извлечении и обработке данных.
@@ -55,11 +55,12 @@ def process_data():
 
                 messages_data.setdefault(country, {})
                 old_msgs = messages_data[country].get(number_id, [])
+
                 known = {(m["from"], m["text"]) for m in old_msgs if m.get("from") and m.get("text")}
                 unique = [m for m in new_msgs if (m.get("from"), m.get("text")) not in known]
 
-                combined = sorted(old_msgs + unique, key=get_timestamp)
-                messages_data[country][number_id] = combined
+                sorted_new = sorted(unique, key=get_timestamp)
+                messages_data[country][number_id] = sorted_new
 
             except Exception as e:
                 print(f"Ошибка: {e}")
