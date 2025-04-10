@@ -99,7 +99,6 @@ def process_data():
 
     # Сохраняем обновлённые данные (старые + новые) в Redis
     print("Сохранение объединённых данных в Redis...")
-    print(json.dumps(messages_data_new, indent=4, ensure_ascii=False))
 
     # Сохраняем объединённые данные (старые + новые) в Redis
     redis_client.set("messages_data_old", json.dumps(messages_data_old, ensure_ascii=False, indent=2))
