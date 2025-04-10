@@ -116,8 +116,13 @@ def process_messages():
     - После обработки данных делает паузу на 60 секунд перед следующим циклом.
     :return: None
     """
+    print("Старт потока обработки сообщений")
     while True:
-        messages_data = process_data()
-        send_sms(messages_data)
-        print("Ожидание 60 секунд перед следующим циклом...")
-        time.sleep(60)
+        try:
+            print("Начинаем обработку данных")
+            messages_data = process_data()
+            send_sms(messages_data)
+            print("Ожидание 60 секунд...")
+            time.sleep(60)
+        except Exception as e:
+            print(f"Ошибка во время цикла: {e}")
