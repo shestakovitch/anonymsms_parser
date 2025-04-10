@@ -2,7 +2,9 @@ import os
 from dotenv import load_dotenv
 
 load_dotenv()
+
 BASE_URL = os.getenv("BASE_URL")
+SMS_URL = os.getenv("SMS_URL")
 SMS_TOKEN = os.getenv("SMS_TOKEN")
 
 REDIS_HOST = os.getenv("REDIS_HOST")

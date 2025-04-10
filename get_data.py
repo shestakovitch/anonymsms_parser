@@ -3,7 +3,7 @@ import json
 from data_collector import process_link, get_timestamp
 from redis_client import redis_client
 from concurrent.futures import ThreadPoolExecutor, as_completed
-
+from sms_sender import send_sms
 
 def process_data():
     """
@@ -103,8 +103,11 @@ def process_data():
 
     # Сохраняем объединённые данные (старые + новые) в Redis
     redis_client.set("messages_data_old", json.dumps(messages_data_old, ensure_ascii=False, indent=2))
+
+    redis_client.set("messages_data_new", json.dumps(messages_data_new, ensure_ascii=False, indent=2))
     print("Сообщения успешно сохранены в Redis.\n")
 
+    return messages_data_new
 
 def process_messages():
     """
@@ -114,6 +117,7 @@ def process_messages():
     :return: None
     """
     while True:
-        process_data()
+        messages_data = process_data()
+        send_sms(messages_data)
         print("Ожидание 60 секунд перед следующим циклом...")
         time.sleep(60)
