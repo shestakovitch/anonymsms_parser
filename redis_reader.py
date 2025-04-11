@@ -4,7 +4,7 @@ from redis_client import redis_client
 
 
 # Получаем все ключи в базе данных
-keys = redis_client.keys('*')
+keys = redis_client.keys('messages_data_new')
 # keys = redis_client.keys('messages_data_old')
 
 # Для каждого ключа выводим его значение
