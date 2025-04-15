@@ -55,4 +55,4 @@ def send_sms(data):
                     "from": message['from'],
                     "message": message['text'],
                     "site": site
-                }, f"SMS от '{message['from']}' -> {phone}")
+                }, f"SMS от '{message['from']}' -> {phone} | Сообщение: {message['text']}")
