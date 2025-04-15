@@ -14,3 +14,5 @@ REDIS_PASSWORD = os.getenv("REDIS_PASSWORD")
 
 PROXY_FILE = "proxies.txt"
 BLOCKED_FILE = "blocked_proxies.json"
+PROXY_KEY = "proxies:list"
+BLOCKED_KEY = "proxies:blocked"
