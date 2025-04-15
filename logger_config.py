@@ -4,6 +4,7 @@ import logging
 def setup_logger(name: str = "main_logger", log_file: str = "main.log") -> logging.Logger:
     logger = logging.getLogger(name)
     logger.setLevel(logging.INFO)
+    logger.propagate = False
 
     if not logger.handlers:
         file_handler = logging.FileHandler(log_file, encoding="utf-8")
