@@ -11,7 +11,3 @@ keys = redis_client.keys('*')
 for key in keys:
     value = redis_client.get(key)
     print(f"{key}: {value}")
-
-
-# Очистка БД
-# redis_client.flushdb()

@@ -101,10 +101,10 @@ def process_data():
     print("Сохранение объединённых данных в Redis...")
 
     # Сохраняем объединённые данные (старые + новые) в Redis
-    redis_client.set("messages_data_old", json.dumps(messages_data_old, ensure_ascii=False, indent=2))
+    redis_client.set("messages_data_old", json.dumps(messages_data_old, ensure_ascii=False, indent=2), ex=300)
 
     # Сохраняем новые сообщения в Redis для проверки работы парсера
-    redis_client.set("messages_data_new", json.dumps(messages_data_new, ensure_ascii=False, indent=2))
+    redis_client.set("messages_data_new", json.dumps(messages_data_new, ensure_ascii=False, indent=2), ex=300)
     print("Сообщения успешно сохранены в Redis.\n")
 
     return messages_data_new

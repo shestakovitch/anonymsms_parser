@@ -37,7 +37,7 @@ def main():
             data = get_numbers(soup)
 
             # Сохраняем данные в Redis
-            redis_client.set("filtered_numbers", json.dumps(data, ensure_ascii=False))
+            redis_client.set("filtered_numbers", json.dumps(data, ensure_ascii=False), ex=3600)
 
             # Добавляем timestamp обновления
             timestamp = datetime.now().strftime("%H:%M:%S %d-%m-%Y")
