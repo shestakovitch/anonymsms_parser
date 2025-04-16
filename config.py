@@ -13,6 +13,6 @@ REDIS_USERNAME = os.getenv("REDIS_USERNAME")
 REDIS_PASSWORD = os.getenv("REDIS_PASSWORD")
 
 PROXY_FILE = "proxies.txt"
-BLOCKED_FILE = "blocked_proxies.json"
-PROXY_KEY = "proxies:list"
-BLOCKED_KEY = "proxies:blocked"
+PROXIES_KEY = "proxies"
+BLOCKED_KEY = "blocked_proxies"
+BLOCK_TIME=1800 # Время на которое прокси исключается из обхода в случае блокировки.

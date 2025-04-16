@@ -5,7 +5,5 @@ __pycache__
 .DS_Store
 .env
 proxies.txt
-blocked_proxies.json
-main.log
 sms.log
 messages.log

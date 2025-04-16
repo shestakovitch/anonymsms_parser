@@ -1,78 +1,62 @@
 import random
 import time
-import json
-from config import PROXY_FILE, BLOCKED_FILE
+from redis_client import redis_client  # Убедись, что есть подключение Redis
+from config import PROXY_FILE, PROXIES_KEY, BLOCKED_KEY, BLOCK_TIME
+
+
+def initialize_proxies():
+    """
+    Загружает прокси из файла в Redis, если ключ ещё не существует.
+    """
+    if not redis_client.exists(PROXIES_KEY):
+        try:
+            with open(PROXY_FILE) as f:
+                proxies = [line.strip() for line in f if line.strip()]
+            if proxies:
+                redis_client.rpush(PROXIES_KEY, *proxies)
+                print(f"[init] Загружено {len(proxies)} прокси в Redis.")
+        except FileNotFoundError:
+            print(f"[init] Файл {PROXY_FILE} не найден. Прокси не загружены.")
 
 
 def load_data():
     """
-    Загружает список доступных прокси и список заблокированных прокси из файлов.
-
-    Основные шаги выполнения:
-    - Пытается открыть файл с прокси (PROXY_FILE), построчно считывает содержимое и формирует список строк без пустых строк.
-    - Если файл не найден, возвращает пустой список прокси.
-    - Пытается открыть файл с заблокированными прокси (BLOCKED_FILE) и загрузить его как JSON-объект (словарь).
-    - Если файл не найден или содержит некорректный JSON, возвращает пустой словарь заблокированных прокси.
-
-    Особенности:
-    - Возвращаемые структуры:
-        - `proxies` — список строковых значений IP:PORT.
-        - `blocked` — словарь, где ключом является IP:PORT, а значением может быть причина или метка блокировки.
-    - Использует защиту от ошибок, чтобы не прерывать выполнение при отсутствии или повреждении файлов.
-    - Позволяет динамически загружать актуальные данные о прокси без жёсткого вшивания путей или значений.
-
-    :return: Кортеж из двух элементов — (список прокси, словарь заблокированных прокси).
+    Загружает список доступных прокси и заблокированных прокси из Redis.
+    :return: (proxies: list[str], blocked: dict[str, float])
     """
-    try:
-        with open(PROXY_FILE) as file:
-            proxies = [line.strip() for line in file if line.strip()]
-    except FileNotFoundError:
-        proxies = []
+    proxies = redis_client.lrange(PROXIES_KEY, 0, -1)
+    proxies = [p.decode() if isinstance(p, bytes) else p for p in proxies]
 
-    try:
-        with open(BLOCKED_FILE) as file:
-            blocked = json.load(file)
-    except (FileNotFoundError, json.JSONDecodeError):
-        blocked = {}
-
+    blocked_raw = redis_client.hgetall(BLOCKED_KEY)
+    blocked = {
+        k.decode() if isinstance(k, bytes) else k:
+            float(v.decode()) if isinstance(v, bytes) else float(v)
+        for k, v in blocked_raw.items()
+    }
     return proxies, blocked
 
 
-proxies, blocked_proxies = load_data()
-
-
-def block_proxy(proxy, block_time=1800):
+def block_proxy(proxy, block_time=BLOCK_TIME):
     """
-    Блокирует указанный прокси на заданное время и сохраняет информацию о блокировке в файл.
-    Основные шаги выполнения:
-    - Добавляет прокси в список заблокированных (`blocked_proxies`) с меткой времени окончания блокировки.
-    - Метка времени блокировки — текущее время плюс время блокировки (по умолчанию 1800 секунд, или 30 минут).
-    - Обновляет файл с заблокированными прокси (`BLOCKED_FILE`), чтобы сохранить текущую информацию о блокировке.
-    - Если прокси блокируются повторно, их блокировка продлевается.
-    Особенности:
-    - Время блокировки можно настроить с помощью аргумента `block_time`.
-    - Блокировка сохраняется на диске, что позволяет учитывать состояние прокси между запуском программы.
-    :param proxy: Строка, представляющая прокси (например, "192.168.1.1:8080").
-    :param block_time: Время в секундах для блокировки прокси (по умолчанию 1800 секунд).
+    Блокирует указанный прокси на заданное время (по умолчанию 1800 сек).
+    :param proxy: str
+    :param block_time: int
     :return: None
     """
-    blocked_proxies[proxy] = time.time() + block_time
-    with open(BLOCKED_FILE, "w") as file:
-        json.dump(blocked_proxies, file)
+    expire_at = time.time() + block_time
+    redis_client.hset(BLOCKED_KEY, proxy, expire_at)
 
 
 def get_proxy():
     """
-    Возвращает случайный прокси, который не заблокирован в данный момент.
-    Основные шаги выполнения:
-    - Фильтрует список доступных прокси, исключая заблокированные.
-    - Проверяет, что время текущей метки для каждого прокси не превышает текущее время.
-    - Если доступные прокси есть, выбирает случайный прокси из доступных.
-    - Если нет доступных прокси, возвращает `None`.
-    Особенности:
-    - Функция может вернуть `None`, если все прокси заблокированы или истекло время блокировки.
-    - Время блокировки прокси проверяется на основе информации в `blocked_proxies`.
-    :return: Строка, представляющая прокси (например, "192.168.1.1:8080"), или `None`, если доступных прокси нет.
+    Возвращает случайный незаблокированный прокси из Redis.
+    :return: str | None
     """
-    available_proxies = [p for p in proxies if time.time() > blocked_proxies.get(p, 0)]
-    return random.choice(available_proxies) if available_proxies else None
+    proxies, blocked = load_data()
+    now = time.time()
+    available = [p for p in proxies if blocked.get(p, 0) < now]
+    return random.choice(available) if available else None
+
+
+# Инициализация при первом импорте модуля
+initialize_proxies()

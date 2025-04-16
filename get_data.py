@@ -119,7 +119,7 @@ def process_messages():
     print("Старт потока обработки сообщений\n")
     while True:
         try:
-            print("Начинаем обработку данных")
+            print("Начинаем обработку данных\n")
             messages_data = process_data()
             send_sms(messages_data)
             print("Ожидание 60 секунд...")
