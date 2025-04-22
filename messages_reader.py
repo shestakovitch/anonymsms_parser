@@ -10,4 +10,3 @@ keys = ('activity_detection_time', 'filtered_numbers', "messages_data_old", "mes
 for key in keys:
     value = redis_client.get(key)
     print(f"{key}: {value}")
-
