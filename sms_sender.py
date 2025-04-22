@@ -1,6 +1,7 @@
 import requests
 from config import BASE_URL, SMS_TOKEN, SMS_URL
 from logger_config import setup_logger
+from redis_client import redis_client
 
 logger = setup_logger("sms_sender", "sms.log")
 
@@ -8,6 +9,10 @@ logger = setup_logger("sms_sender", "sms.log")
 def send_request(action, params, description):
     """
     Отправляет GET-запрос к API SMS-сервиса.
+
+    :param action: Действие (например, 'newnum' или 'newsms')
+    :param params: Словарь параметров для запроса
+    :param description: Описание действия для логирования
     """
     try:
         response = requests.get(SMS_URL, params=params, timeout=10)
@@ -28,6 +33,10 @@ def send_request(action, params, description):
 def send_sms(data):
     """
     Отправляет SMS-сообщения через внешний сервис.
+    Перед отправкой проверяет в Redis, добавлялся ли номер ранее.
+    Если номер новый, он добавляется в Redis и отправляется как новый в API.
+
+    :param data: Словарь вида {country_code: {phone_number: [messages]}}
     """
     if not SMS_TOKEN:
         logger.error("Ошибка: переменная окружения SMS_TOKEN не установлена.")
@@ -36,17 +45,20 @@ def send_sms(data):
     for country, numbers in data.items():
         for phone, messages in numbers.items():
             site = f"{BASE_URL}/number/{phone}/"
+            redis_key = f"sms:number:{phone}"
 
-            # Добавляем номер
-            send_request("newnum", {
-                "token": SMS_TOKEN,
-                "action": "newnum",
-                "phone": phone,
-                "country_code": country,
-                "site": site
-            }, f"Добавление номера {phone} ({country})")
+            # Проверка: если номер ещё не добавлен, регистрируем его и сохраняем в Redis
+            if not redis_client.exists(redis_key):
+                send_request("newnum", {
+                    "token": SMS_TOKEN,
+                    "action": "newnum",
+                    "phone": phone,
+                    "country_code": country,
+                    "site": site
+                }, f"Добавление номера {phone} ({country})")
+                redis_client.set(redis_key, 1)
 
-            # Отправляем SMS
+            # Отправка всех SMS-сообщений для номера
             for message in messages:
                 send_request("newsms", {
                     "token": SMS_TOKEN,
